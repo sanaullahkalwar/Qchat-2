@@ -1,0 +1,161 @@
+<p-toast></p-toast>
+
+<div class="whatsapp-container">
+
+  <div class="whatsapp-header">
+    <div class="header-left">
+      <div class="avatar avatar-selected">{{ selectedUserInitials }}</div>
+      <div class="contact-info">
+        <h2>{{ selectedUserName || 'Select a user' }}</h2>
+        <p class="status">{{ selectedUser ? 'online' : 'no user selected' }}</p>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="algorithm-selector">
+        <label for="algorithm-select" class="visually-hidden">Encryption algorithm</label>
+        <select
+          id="algorithm-select"
+          class="algorithm-select"
+          [(ngModel)]="selectedAlgorithm"
+          (ngModelChange)="onAlgorithmChange($event)"
+          title="Choose which key-exchange algorithm to test"
+        >
+          @for (algo of availableAlgorithms; track algo) {
+            <option [value]="algo">{{ algo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="algorithm-selector">
+        <label for="sig-algorithm-select" class="visually-hidden">Signature algorithm</label>
+        <select
+          id="sig-algorithm-select"
+          class="algorithm-select"
+          [(ngModel)]="selectedSigAlgorithm"
+          (ngModelChange)="onSigAlgorithmChange($event)"
+          title="Choose which ML-DSA signature algorithm to test"
+        >
+          @for (sigAlgo of availableSigAlgorithms; track sigAlgo) {
+            <option [value]="sigAlgo">{{ sigAlgo }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="user-combobox" combobox>
+        <label id="user-combobox-label" for="user-combobox-input" class="visually-hidden">
+          Select chat user
+        </label>
+        <div comboboxPopupContainer class="combobox-input-wrapper">
+          <input
+            id="user-combobox-input"
+            name="user-combobox"
+            [value]="selectedUserLabel"
+            readonly
+            autocomplete="off"
+            aria-autocomplete="list"
+            aria-haspopup="listbox"
+            [attr.aria-expanded]="isPopupOpen"
+            aria-controls="user-combobox-popup"
+            [attr.aria-activedescendant]="activeDescendantId"
+            aria-labelledby="user-combobox-label"
+            class="user-selector"
+            comboboxInput
+            (keydown)="onComboboxKeydown($event)"
+            (focus)="onComboboxFocus()"
+            (blur)="onComboboxBlur()"
+          />
+          @if (isPopupOpen && users.length) {
+            <div
+              id="user-combobox-popup"
+              class="combobox-popup"
+              role="listbox"
+              comboboxPopup
+            >
+              @for (user of users; track user.id; let idx = $index) {
+                <button
+                  type="button"
+                  role="option"
+                  [id]="optionId(idx)"
+                  [attr.aria-selected]="idx === activeOptionIndex"
+                  class="combobox-option"
+                  (click)="selectUser(user)"
+                >
+                  <span class="option-avatar">{{ user.firstName[0] }}{{ user.lastName[0] }}</span>
+                  {{ user.firstName }} {{ user.lastName }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="current-user-info">
+        <div class="avatar avatar-me" title="{{ currentUser?.firstName }} {{ currentUser?.lastName }}">
+          {{ currentUserInitials }}
+        </div>
+        <!-- {{ currentUser?.firstName }} {{ currentUser?.lastName }} -->
+        <button class="logout-btn" (click)="logout()" title="Sign out">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="messages" #messagesContainer>
+    @if (!selectedUser) {
+      <div class="empty-state">
+        <div class="empty-icon">&#x1F4AC;</div>
+        <p>Select a user to start chatting</p>
+      </div>
+    } @else if (displayMessages.length === 0) {
+      <div class="empty-state">
+        <div class="empty-icon">&#x1F44B;</div>
+        <p>No messages yet. Say hello!</p>
+      </div>
+    } @else {
+      @for (msg of displayMessages; track msg.id) {
+        <div class="message-group" [class.sent]="isSentByCurrentUser(msg)">
+          <div class="message" [class.my-message]="isSentByCurrentUser(msg)">
+            <div class="message-bubble">
+              <p class="message-text">{{ msg.content }}</p>
+              <div class="message-meta">
+                <span class="message-time">{{ formatTime(msg.createdAt) }}</span>
+                @if (msg.sigAlgorithm) {
+                  @if (msg.signatureValid === true) {
+                    <span class="sig-badge sig-valid" title="{{ msg.sigAlgorithm }} signature verified">&#x2713; {{ msg.sigAlgorithm }}</span>
+                  } @else if (msg.signatureValid === false) {
+                    <span class="sig-badge sig-invalid" title="Signature verification FAILED">&#x26A0; signature invalid</span>
+                  }
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    }
+  </div>
+
+  <div class="input-area">
+    <div class="input-wrapper">
+      <input
+        [(ngModel)]="messageText"
+        (keyup.enter)="sendMessage()"
+        placeholder="Type a message"
+        type="text"
+        class="message-input"
+        [disabled]="!selectedUser"
+      />
+      <button class="send-button" (click)="sendMessage()" [disabled]="!selectedUser || !messageText.trim()" aria-label="Send message">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+</div>

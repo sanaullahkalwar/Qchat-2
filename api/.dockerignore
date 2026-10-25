@@ -1,0 +1,4 @@
+quantum.db
+quantum.db-wal
+quantum.db-shm
+node_modules

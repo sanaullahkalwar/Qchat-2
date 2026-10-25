@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  frontend:
+    build: ./ui
+    container_name: qchat-ui
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./ui:/usr/src/app
+      - /usr/src/app/node_modules
+    command: bun run dev --host 0.0.0.0 --port 4200
+
+  backend:
+    build: ./api
+    container_name: express-api
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+    command: bun run dev --host 0.0.0.0 --port 3000

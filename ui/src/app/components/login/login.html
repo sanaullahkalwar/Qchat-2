@@ -1,0 +1,37 @@
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <div class="brand-logo">&#x1F4AC;</div>
+            <h1>Qchat</h1>
+        </div>
+
+        <form (submit)="$event.preventDefault()" class="auth-form">
+            <div class="form-field">
+                <label for="login-username">Username</label>
+                <input pInputText id="login-username" placeholder="Enter your username" [(ngModel)]="username"
+                    name="username" autocomplete="username" class="w-full" />
+            </div>
+
+            <div class="form-field">
+                <label for="login-password">Password</label>
+                <input pInputText id="login-password" type="password" placeholder="Enter your password"
+                    [(ngModel)]="password" name="password" autocomplete="current-password" class="w-full"
+                    (keyup.enter)="onLogin()" />
+            </div>
+
+            @if (error) {
+            <div class="auth-error">{{ error }}</div>
+            }
+
+            <button pButton type="button" class="auth-btn w-full" (click)="onLogin()"
+                [disabled]="loading">
+                @if (loading) { Signing in… } @else { Sign In }
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            Don't have an account?
+            <a [routerLink]="['/register']" class="auth-link">Register now</a>
+        </p>
+    </div>
+</div>

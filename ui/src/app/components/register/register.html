@@ -1,0 +1,55 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="brand-logo">&#x1F4AC;</div>
+      <h1>Qchat</h1>
+      <p>Create your account</p>
+    </div>
+
+    <form (submit)="$event.preventDefault()" class="auth-form">
+      <div class="form-row">
+        <div class="form-field">
+          <label for="reg-firstname">First Name</label>
+          <input pInputText id="reg-firstname" placeholder="First name" [(ngModel)]="firstName" name="firstName" class="w-full" />
+        </div>
+        <div class="form-field">
+          <label for="reg-lastname">Last Name</label>
+          <input pInputText id="reg-lastname" placeholder="Last name" [(ngModel)]="lastName" name="lastName" class="w-full" />
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="reg-username">Username</label>
+        <input pInputText id="reg-username" placeholder="Choose a username" [(ngModel)]="username" name="username" autocomplete="username" class="w-full" />
+      </div>
+
+      <div class="form-field">
+        <label for="reg-password">Password</label>
+        <input pInputText id="reg-password" type="password" placeholder="Create a password" [(ngModel)]="password" name="password" autocomplete="new-password" class="w-full" />
+      </div>
+
+      <div class="form-field">
+        <label for="reg-confirm-password">Confirm Password</label>
+        <input pInputText id="reg-confirm-password" type="password" placeholder="Repeat your password" [(ngModel)]="confirmPassword" name="confirmPassword" autocomplete="new-password" class="w-full" (keyup.enter)="onRegister()" />
+      </div>
+
+      <div class="form-terms">
+        <input type="checkbox" id="terms" [(ngModel)]="terms" name="terms" />
+        <label for="terms">I accept the <span class="auth-link">Terms &amp; Conditions</span></label>
+      </div>
+
+      @if (error) {
+        <div class="auth-error">{{ error }}</div>
+      }
+
+      <button pButton type="button" class="auth-btn w-full" (click)="onRegister()" [disabled]="loading">
+        @if (loading) { Creating account… } @else { Create Account }
+      </button>
+    </form>
+
+    <p class="auth-footer">
+      Already have an account?
+      <a routerLink="/login" class="auth-link">Sign in</a>
+    </p>
+  </div>
+</div>
