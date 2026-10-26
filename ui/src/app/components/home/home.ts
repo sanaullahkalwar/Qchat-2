@@ -326,6 +326,7 @@ export class Home implements OnInit, OnDestroy {
         }
       }
       
+      if (this.selectedUser !== conversationUserId) return;
       this.allMessages = messages;
       this.cdr.detectChanges();
       setTimeout(() => this.scrollToBottom(), 0);
