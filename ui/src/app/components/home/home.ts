@@ -222,13 +222,14 @@ export class Home implements OnInit, OnDestroy {
   }
 
   async loadMessages() {
-    if (!this.selectedUser || this.isLoadingMessages) return;
+    const conversationUserId = this.selectedUser;
+    if (!conversationUserId || this.isLoadingMessages) return;
     this.isLoadingMessages = true;
     try {
-      const response = await fetch(`${API_URL}/users/${this.selectedUser}/messages`, {
+      const response = await fetch(`${API_URL}/users/${conversationUserId}/messages`, {
         headers: this.auth.getAuthHeaders(),
       });
-      if (!response.ok) return;
+      if (!response.ok || this.selectedUser !== conversationUserId) return;
       const messages = (await response.json()) as Message[];
       
       for (const msg of messages) {
