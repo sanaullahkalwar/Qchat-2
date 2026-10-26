@@ -109,16 +109,26 @@ app.get('/users/:id/messages', async (c) => {
     .orderBy(asc(messages.createdAt))
     .all();
 
+  // Reuse the sender's public-key lookup for messages signed by the same
+  // user/algorithm during this request, instead of querying once per message.
+  const senderKeyCache = new Map<string, Promise<{ public_key: string } | undefined>>();
+
   // Verify each message's ML-DSA signature (if present) using the sender's
   // stored public key, so the client can show an authenticity indicator.
   const withVerification = await Promise.all(records.map(async (msg) => {
     if (!msg.signature || !msg.sigAlgorithm) {
       return { ...msg, signatureValid: null }; // unsigned message (e.g. sent before this feature, or signing failed)
     }
-    const senderSigKey = await db.select({ public_key: quantumSigKeys.public_key })
-      .from(quantumSigKeys)
-      .where(and(eq(quantumSigKeys.user_id, msg.senderId), eq(quantumSigKeys.algorithm, msg.sigAlgorithm)))
-      .get();
+    const cacheKey = `${msg.senderId}:${msg.sigAlgorithm}`;
+    let senderSigKeyPromise = senderKeyCache.get(cacheKey);
+    if (!senderSigKeyPromise) {
+      senderSigKeyPromise = db.select({ public_key: quantumSigKeys.public_key })
+        .from(quantumSigKeys)
+        .where(and(eq(quantumSigKeys.user_id, msg.senderId), eq(quantumSigKeys.algorithm, msg.sigAlgorithm)))
+        .get();
+      senderKeyCache.set(cacheKey, senderSigKeyPromise);
+    }
+    const senderSigKey = await senderSigKeyPromise;
     if (!senderSigKey) {
       return { ...msg, signatureValid: null };
     }
