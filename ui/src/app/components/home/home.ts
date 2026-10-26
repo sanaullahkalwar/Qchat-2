@@ -61,6 +61,14 @@ export class Home implements OnInit, OnDestroy {
   currentUser: UserRecord | null = null;
   messageText = '';
   private intervalId: any;
+  private isLoadingMessages = false;
+  private readonly decryptedMessageCache = new Map<number, {
+    encryptedContent: string;
+    quantumCiphertext?: string;
+    algorithm?: Algorithm;
+    content: string;
+    isEncrypted: boolean;
+  }>();
   
   quantumReady: Map<number, boolean> = new Map();
 
@@ -214,7 +222,8 @@ export class Home implements OnInit, OnDestroy {
   }
 
   async loadMessages() {
-    if (!this.selectedUser) return;
+    if (!this.selectedUser || this.isLoadingMessages) return;
+    this.isLoadingMessages = true;
     try {
       const response = await fetch(`${API_URL}/users/${this.selectedUser}/messages`, {
         headers: this.auth.getAuthHeaders(),
@@ -223,6 +232,19 @@ export class Home implements OnInit, OnDestroy {
       const messages = (await response.json()) as Message[];
       
       for (const msg of messages) {
+        const encryptedContent = msg.content;
+        const cached = msg.id ? this.decryptedMessageCache.get(msg.id) : undefined;
+        if (
+          cached &&
+          cached.encryptedContent === encryptedContent &&
+          cached.quantumCiphertext === msg.quantumCiphertext &&
+          cached.algorithm === msg.algorithm
+        ) {
+          msg.content = cached.content;
+          msg.isEncrypted = cached.isEncrypted;
+          continue;
+        }
+
         let displayContent = msg.content;
         let isEncrypted = false;
         
@@ -291,6 +313,16 @@ export class Home implements OnInit, OnDestroy {
         
         msg.content = displayContent;
         msg.isEncrypted = isEncrypted;
+
+        if (msg.id && isEncrypted) {
+          this.decryptedMessageCache.set(msg.id, {
+            encryptedContent,
+            quantumCiphertext: msg.quantumCiphertext,
+            algorithm: msg.algorithm,
+            content: displayContent,
+            isEncrypted,
+          });
+        }
       }
       
       this.allMessages = messages;
@@ -298,6 +330,8 @@ export class Home implements OnInit, OnDestroy {
       setTimeout(() => this.scrollToBottom(), 0);
     } catch (error) {
       console.error('Error loading messages:', error);
+    } finally {
+      this.isLoadingMessages = false;
     }
   }
 
