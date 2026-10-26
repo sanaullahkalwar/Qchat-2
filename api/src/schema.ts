@@ -1,5 +1,5 @@
 // api/src/schema.ts
-import { int, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
+import { index, int, sqliteTable, text, unique } from "drizzle-orm/sqlite-core";
 
 export const users = sqliteTable("users", {
     id: int().primaryKey({ autoIncrement: true }),
@@ -20,7 +20,12 @@ export const messages = sqliteTable("messages", {
     signature: text(), // ML-DSA signature over the content, base64
     sigAlgorithm: text(), // which ML-DSA variant produced the signature (null if unsigned)
     createdAt: text().notNull().default(new Date().toISOString()),
-});
+}, (table) => ({
+    senderReceiverCreatedAtIdx: index("messages_sender_receiver_created_at_idx")
+        .on(table.senderId, table.receiverId, table.createdAt),
+    receiverSenderCreatedAtIdx: index("messages_receiver_sender_created_at_idx")
+        .on(table.receiverId, table.senderId, table.createdAt),
+}));
 
 export const quantumKeys = sqliteTable("quantum_keys", {
     id: int().primaryKey({ autoIncrement: true }),
