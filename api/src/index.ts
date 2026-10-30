@@ -255,7 +255,6 @@ app.post('/quantum/generate-sig-keys', async (c) => {
   if (existing) {
     return c.json({
       publicKey: existing.public_key,
-      secretKey: decryptFromStorage(existing.secret_key),
       algorithm,
       message: 'Using existing signature keys'
     });
@@ -274,7 +273,6 @@ app.post('/quantum/generate-sig-keys', async (c) => {
 
   return c.json({
     publicKey: keypair.publicKey,
-    secretKey: keypair.secretKey,
     algorithm,
     message: 'New signature keys generated and stored'
   });
